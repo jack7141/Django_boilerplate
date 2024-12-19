@@ -42,8 +42,6 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 CORS_ORIGIN_WHITELIST = ["http://127.0.0.1:3000", "http://localhost:3000", "http://admin.linchfin.com"]
 CORS_ALLOW_CREDENTIALS = True
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -62,6 +60,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
+    "djangorestframework_camel_case",
+    "drf_spectacular",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
@@ -93,7 +98,27 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api_server.configs.wsgi.application'
-
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PARSER_CLASSES": (
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+    ),
+    "DEFAULT_RENDERER_CLASSES": (
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
