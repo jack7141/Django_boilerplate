@@ -14,23 +14,27 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from django.conf import global_settings
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 RESOURCE_DIR = BASE_DIR.joinpath("resources")
 STATIC_ROOT = RESOURCE_DIR.joinpath("static")
 TEMPLATE_DIR = RESOURCE_DIR.joinpath("templates")
+secret_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'secret.json')
+
+with open(secret_file, encoding='utf-8') as f:
+    secrets = json.loads(f.read())
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-def get_secret(base_dir: Path):
-    secret_file_path = base_dir.joinpath("configs/settings/secret.json")
-    if not secret_file_path.exists():
-        raise FileNotFoundError(f"Cant' find secret file in path({secret_file_path})")
-
-    return json.load(secret_file_path.open("r"))
+def get_secret(setting, secrets=secrets):
+    """비밀 변수를 가져오거나 명시적 예외를 반환한다."""
+    try:
+        return secrets.get(setting) if secrets.get(setting, None) \
+            else (getattr(global_settings, setting) if hasattr(global_settings, setting) else eval(setting))
+    except KeyError:
+        error_msg = "Set the {} environment variable".format(setting)
+        raise ImproperlyConfigured(error_msg)
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -39,21 +43,19 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # SECURITY WARNING: Check CORS
-CORS_ORIGIN_WHITELIST = ["http://127.0.0.1:3000", "http://localhost:3000", "http://admin.linchfin.com"]
+CORS_ORIGIN_WHITELIST = ["http://127.0.0.1:3000", "http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f-te+ffrmowvy$&zd4=_cnqdv60#n_b64&xblx7)z0zh2qs^iu'
-
+SECRET_KEY = get_secret('SECRET_KEY')
+DATABASES = get_secret('DATABASES')
 
 # Application definition
+DEFAULT_CHARSET = 'utf-8'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -78,36 +81,60 @@ ROOT_URLCONF = 'api_server.configs.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            TEMPLATE_DIR,
+        ],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'api_server.configs.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PARSER_CLASSES": (
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+    ),
+    "DEFAULT_RENDERER_CLASSES": (
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Django Boilerplate",
+    "DESCRIPTION": "Django Boilerplate API documentation generated by drf-specatular",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+        "filter": True,
+    },
+    "LICENSE": {
+        "name": "MIT License",
+    },
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -124,13 +151,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
@@ -146,3 +169,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CELERY SETTINGS
+if DEBUG:
+    CELERY_ALWAYS_EAGER = True
+
+
+CELERY_TIMEZONE = "Asia/Seoul"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis_server:6379/1")
+CELERY_RESULT_BACKEND = os.getenv(
+    "CELERY_RESULT_BACKEND", "redis://redis_server:6379/2"
+)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
