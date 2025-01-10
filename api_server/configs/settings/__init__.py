@@ -1,9 +1,8 @@
-from .base import *
+import os
 
-env = os.getenv("ENV", "develop")
+ENV_TYPE = os.getenv('RUNNING_ENV', 'base')
 
-if env == "develop":
-    from .develop import *
-elif env == "heroku":
-    from .heroku import *
-
+try:
+    exec('from .{} import *'.format(ENV_TYPE))
+except ImportError:
+    from .base import *
