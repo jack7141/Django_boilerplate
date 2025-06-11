@@ -1,7 +1,6 @@
 FROM python:3.11
 
 EXPOSE 8000
-
 WORKDIR /app
 
 # 시스템 패키지 설치

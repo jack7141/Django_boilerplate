@@ -12,12 +12,12 @@
 .idea/workspace.xml
 .DS_Store
 .git/
+.venv
 .sass-cache
 .vagrant/
 __pycache__
 dist
 docs
-env
 logs
 celerybeat.pid
 celerybeat-schedule.db
