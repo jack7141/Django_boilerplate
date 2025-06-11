@@ -23,9 +23,6 @@ TEMPLATE_DIR = RESOURCE_DIR.joinpath("templates")
 
 environ.Env.read_env(os.path.join(ENV_ROOT, '.env'))
 env = os.environ
-
-
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
