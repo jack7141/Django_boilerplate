@@ -9,32 +9,21 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-import json
 import os
-from datetime import timedelta
 from pathlib import Path
 
-from django.conf import global_settings
-from django.core.exceptions import ImproperlyConfigured
+import environ
 
+
+ENV_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 RESOURCE_DIR = BASE_DIR.joinpath("resources")
 STATIC_ROOT = RESOURCE_DIR.joinpath("static")
 TEMPLATE_DIR = RESOURCE_DIR.joinpath("templates")
-secret_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'secret.json')
 
-with open(secret_file, encoding='utf-8') as f:
-    secrets = json.loads(f.read())
+environ.Env.read_env(os.path.join(ENV_ROOT, '.env'))
+env = os.environ
 
-
-def get_secret(setting, secrets=secrets):
-    """비밀 변수를 가져오거나 명시적 예외를 반환한다."""
-    try:
-        return secrets.get(setting) if secrets.get(setting, None) \
-            else (getattr(global_settings, setting) if hasattr(global_settings, setting) else eval(setting))
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(setting)
-        raise ImproperlyConfigured(error_msg)
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -51,8 +40,14 @@ CORS_ALLOW_CREDENTIALS = True
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_secret('SECRET_KEY')
-DATABASES = get_secret('DATABASES')
+SECRET_KEY = env.get('DJANGO_SECRET_KEY', 'SECRET_KEY')
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
 
 # Application definition
 DEFAULT_CHARSET = 'utf-8'
