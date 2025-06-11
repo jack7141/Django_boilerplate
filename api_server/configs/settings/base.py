@@ -12,20 +12,15 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
-import environ
-
-
 ENV_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 RESOURCE_DIR = BASE_DIR.joinpath("resources")
 STATIC_ROOT = RESOURCE_DIR.joinpath("static")
 TEMPLATE_DIR = RESOURCE_DIR.joinpath("templates")
 
-environ.Env.read_env(os.path.join(ENV_ROOT, '.env'))
 env = os.environ
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # SECURITY WARNING: Check CORS
