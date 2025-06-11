@@ -19,6 +19,7 @@ __pycache__
 dist
 docs
 logs
+.env
 celerybeat.pid
 celerybeat-schedule.db
 pasture/configs/settings/local.py
