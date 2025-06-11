@@ -18,6 +18,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/conf/entrypoint.sh
 
-CMD ["/app/entrypoint.sh"]
+CMD ["/bin/bash", "/app/conf/entrypoint.sh"]
