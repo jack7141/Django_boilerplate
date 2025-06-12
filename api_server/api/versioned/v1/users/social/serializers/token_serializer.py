@@ -6,8 +6,9 @@ from rest_framework import serializers
 
 from api_server.users.models import User
 
-from oauth2_provider.models import AccessToken, RefreshToken
+from oauth2_provider.models import AccessToken, RefreshToken, Application
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 from django.conf import settings
 
 class AccessTokenIssueSerializer(serializers.Serializer):
@@ -18,26 +19,41 @@ class AccessTokenIssueSerializer(serializers.Serializer):
     token_type = serializers.CharField(read_only=True)
     scope = serializers.CharField(read_only=True)
 
+    def get_application():
+        """OAuth2 Application 조회"""
+        try:
+            return Application.objects.get(name='Django API Server')
+        except Application.DoesNotExist:
+            raise ValidationError("OAuth2 Application이 설정되지 않았습니다.")
+
     def validate(self, attrs):
         user = get_object_or_404(User, id=attrs.get('user_id', None))
-        expires = settings.ACEESS_TOKEN_EXPIRES - 2
+        application = Application.objects.filter(name='Django API Server').first()
+        expires = getattr(settings, 'ACCESS_TOKEN_EXPIRES', 3600) - 2
         access_token = AccessToken.objects.create(
             user=user, token=generate_token(),
-            expires=timezone.now() + datetime.timedelta(seconds=expires), scope='read write'
+            expires=timezone.now() + datetime.timedelta(seconds=expires), scope='read write', application=application,
         )
         refresh_token = RefreshToken.objects.create(
-            user=user, token=generate_token(), access_token=access_token
+            user=user, token=generate_token(), access_token=access_token, application=application,
         )
         print(f'access token id : {access_token.id}')
         AccessToken.objects.filter(user=user).exclude(id=access_token.id).delete()
 
-        attrs['access_token'] = access_token.token
-        attrs['refresh_token'] = refresh_token.token
-        attrs['expires_in'] = expires
+        return {
+            'access_token': access_token.token,
+            'refresh_token': refresh_token.token,
+            'expires_in': expires,
+            'token_type': 'Bearer',
+            'scope': access_token.scope,
+            'user_id': str(user.id),
+        }
 
-        attrs['token_type'] = 'Bearer'
-        attrs['scope'] = access_token.scope
-        return attrs
+    def to_representation(self, instance):
+        """응답 데이터 형태로 변환"""
+        if isinstance(instance, dict):
+            return instance
+        return super().to_representation(instance)
 
     def to_res_dict(self):
         res_data = {

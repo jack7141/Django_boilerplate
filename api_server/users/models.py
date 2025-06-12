@@ -2,11 +2,23 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
 from model_utils.managers import SoftDeletableManager
 from model_utils.models import UUIDModel, SoftDeletableModel
 
 
-# Create your models here.
+GENDER_TYPE = Choices(
+    ('M', 'MALE', '남자'),
+    ('F', 'FEMALE', '여자'),
+    ('U', 'OTHER', '미제공'),
+)
+
+IMAGE_SCALE = Choices(
+    ('RAW', 'RAW', '원본'),  # 원본
+    ('DETAIL', 'DETAIL', '상세'),  # 상세보기
+    ('NORMAL', 'NORMAL', '일반'),  # 일반
+    ('THUMBNAIL', 'THUMBNAIL', '미리보기'),  # 미리보기
+)
 
 class UserManager(SoftDeletableManager, BaseUserManager):
     def create_user(self, username, password=None):
@@ -41,6 +53,42 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
 
     objects = UserManager(_emit_deprecation_warnings=True)
 
+    @property
+    def has_profile(self):
+        return hasattr(self, 'profile')
+
     class Meta:
         verbose_name = '사용자 목록'
         verbose_name_plural = verbose_name
+
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name='사용자')
+    nickname = models.CharField(max_length=60, null=True, blank=True, verbose_name='사용자 닉네임')
+    link = models.URLField(max_length=255, null=True, blank=True, verbose_name='개인 사이트 링크')
+    email = models.EmailField(verbose_name='사용자 이메일', null=True, blank=True)
+    gender = models.CharField(max_length=1, verbose_name='성별', null=True, blank=True, choices=GENDER_TYPE)
+    birthday = models.DateField(verbose_name='생일', null=True, blank=True)
+    introduce = models.TextField(verbose_name='프로필 소개', null=True, blank=True)
+
+    @property
+    def image_sets(self):
+        images_by_scale = {}
+        for img in self.images.all():
+            if img.scale in images_by_scale:
+                continue
+            images_by_scale[img.scale] = img
+
+        # 이미지를 가져오면서 대체 이미지 처리
+        raw = images_by_scale.get(IMAGE_SCALE.RAW)
+        detail = images_by_scale.get(IMAGE_SCALE.DETAIL) or raw
+        normal = images_by_scale.get(IMAGE_SCALE.NORMAL) or detail
+        thumbnail = images_by_scale.get(IMAGE_SCALE.THUMBNAIL) or normal
+
+        return {
+            'RAW': raw,
+            'DETAIL': detail,
+            'NORMAL': normal,
+            'THUMBNAIL': thumbnail,
+        }

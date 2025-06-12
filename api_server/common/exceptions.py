@@ -40,7 +40,6 @@ class UnauthenticatedRequestExists(CustomAPIException):
     default_code = 'verificationCode'
     yasg_description = '인증이 완료 되지 않은 요청이 있음'
 
-    
 
 class InvalidAuthenticatedCode(CustomAPIException):
     error_code = '100101'

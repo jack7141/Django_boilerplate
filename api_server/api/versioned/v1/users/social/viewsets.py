@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from api_server.api.versioned.v1.users.social.serializers.token_serializer import AccessTokenIssueSerializer, \
     AccessTokenSetNoProfileSerializer
+from api_server.common.utils import get_client_ip
 from api_server.oauth.models import LoginHistory
 from api_server.users.models import User
 
@@ -24,6 +25,7 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         token_serializer.is_valid(raise_exception=True)
         res_serializer = AccessTokenSetNoProfileSerializer(data=token_serializer.data)
         res_serializer.is_valid(raise_exception=True)
+        print(res_serializer.data)
         return Response(res_serializer.data, status=status.HTTP_412_PRECONDITION_FAILED)
 
     def success_login_response(self, user):
