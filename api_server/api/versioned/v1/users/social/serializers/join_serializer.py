@@ -26,6 +26,7 @@ class JoinSerializer(serializers.Serializer):
     nickname = serializers.CharField()
     email = serializers.EmailField()
     birthday = serializers.DateField(required=False, allow_null=True)
+
     def validate(self, attrs):
         user = self.context['request'].user
         self.user = user

@@ -71,18 +71,16 @@ class UserJoinViewSet(UserAuthViewSet):
 
     @swagger_auto_schema(
         operation_summary='회원 가입',
-        operation_description='소셜 로그인 후 LingPick 서비스에서 필요한 일부 양식을 입력 하여 회원 가입 시 호출. '
+        operation_description='소셜 로그인 후 서비스에서 필요한 일부 양식을 입력 하여 회원 가입 시 호출하여 회원의 profile 데이터를 채움. '
                               '회원 가입이 되어있지 않으면 소셜 로그인으로 서비스 이용이 불가',
     )
     def create(self, request, *args, **kwargs):
         user = request.user
-        print(f'join with user : {user}')
         if user.has_profile:
             raise AlreadyJoined
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        print(f'serializer.validated_data : {serializer.validated_data}')
         user_id = serializer.validated_data.get('user_id')
         if User.objects.filter(user_id=user_id).exists():
             return Response(status=status.HTTP_409_CONFLICT)
@@ -90,5 +88,4 @@ class UserJoinViewSet(UserAuthViewSet):
 
         s = AccessTokenIssueSerializer(data={'user_id': user.id})
         s.is_valid(raise_exception=True)
-        print(f'resonse ?? : {s.to_res_dict()}')
         return Response(s.to_res_dict(), status=status.HTTP_201_CREATED)
