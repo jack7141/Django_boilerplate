@@ -54,7 +54,10 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework',
     'drf_yasg',
+    'phone_field',
+    'encrypted_fields',
     'api_server.users',
+    'api_server.oauth',
 ]
 
 MIDDLEWARE = [
@@ -157,9 +160,26 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# AUTH_USER_MODEL = "users.User"
+AUTH_USER_MODEL = "users.User"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+OAUTH2_PROVIDER = {
+    "SCOPES": {
+        "read": "Read scope",
+        "write": "Write scope",
+    },
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 604800 * 12,
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 604800 * 12,
+}
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+)
+ENC_FIELD_KEY_1 = env.get('FIELD_ENCRYPTION_KEYS')
+FIELD_ENCRYPTION_KEYS = [ENC_FIELD_KEY_1]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
