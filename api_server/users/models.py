@@ -11,7 +11,7 @@ from model_utils.models import UUIDModel, SoftDeletableModel
 class UserManager(SoftDeletableManager, BaseUserManager):
     """"""
 
-class LingPickUser(UUIDModel, AbstractUser, SoftDeletableModel):
+class User(UUIDModel, AbstractUser, SoftDeletableModel):
     user_id = models.CharField(
         max_length=20, null=True, blank=True, verbose_name='사용자 검색 등에 사용되는 고유 아이디',
                                help_text='입력된 아이디는 고유한 값을 가짐. (중복불가)<br/>''또한 변경 가능하지만, 최종으로 사용된 아이디는 회원 탈퇴가 있더라도 재사용 할 수는 없음',
