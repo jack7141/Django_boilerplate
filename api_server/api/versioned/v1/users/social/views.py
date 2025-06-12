@@ -14,8 +14,8 @@ from api_server.api.versioned.v1.users.social.serializers.kakao_serializer impor
 from api_server.api.versioned.v1.users.social.serializers.token_serializer import AccessTokenIssueSerializer
 from api_server.api.versioned.v1.users.social.viewsets import SocialOAuthViewSet
 from api_server.common.exceptions import InvalidSocialToken, AlreadyJoined
-from api_server.common.viewset import MappingViewSetMixin
-from api_server.oauth.models import AuthWithGoogle
+from api_server.common.viewset import MappingViewSetMixin, QuerysetMapMixin
+from api_server.oauth.models import AuthWithGoogle, AuthWithKakao, AuthWithNaver, AuthWithApple
 
 from google.oauth2.id_token import verify_oauth2_token
 from google.auth.transport.requests import Request
@@ -39,9 +39,15 @@ class UserAuthViewSet(
         return super().create(request, *args, **kwargs)
 
 
-class AuthViewSet(MappingViewSetMixin, SocialOAuthViewSet):
+class AuthViewSet(MappingViewSetMixin, QuerysetMapMixin, SocialOAuthViewSet):
     """"""
-    queryset = AuthWithGoogle.objects.all()
+    # queryset = AuthWithGoogle.objects.all()
+    queryset_map = {
+        "create_google": AuthWithGoogle.objects.all(),
+        "create_kakao": AuthWithKakao.objects.all(),
+        "create_naver": AuthWithNaver.objects.all(),
+        "create_apple": AuthWithApple.objects.all(),
+    }
     # 플랫폼별 prefix 매핑
     platform_prefix_map = {
         "create_google": "google",

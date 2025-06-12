@@ -49,5 +49,5 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     def success_login_and_require_join_response(self, social_id):
         username = self.social_id_by_platform(social_id, self.action)
         user = User.objects.create_user(username=username)
-        self.queryset.create(user=user, social_id=social_id)
+        self.get_queryset().create(user=user, social_id=social_id)
         return self.require_join_response(user.id)
