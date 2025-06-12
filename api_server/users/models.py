@@ -9,7 +9,19 @@ from model_utils.models import UUIDModel, SoftDeletableModel
 # Create your models here.
 
 class UserManager(SoftDeletableManager, BaseUserManager):
-    """"""
+    def create_user(self, username, password=None):
+        user = self.model(username=username,)
+        if password:
+            user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password=None):
+        user = self.create_user(username, password=password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
 
 class User(UUIDModel, AbstractUser, SoftDeletableModel):
     user_id = models.CharField(
