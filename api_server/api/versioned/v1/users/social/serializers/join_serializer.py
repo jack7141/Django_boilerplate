@@ -24,7 +24,7 @@ class JoinSerializer(serializers.Serializer):
         validators=[UniqueValidator(queryset=User.all_objects.exclude(user_id=None))],
     )
     nickname = serializers.CharField()
-    email = serializers.EmailField()
+    email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
     birthday = serializers.DateField(required=False, allow_null=True)
 
     def validate(self, attrs):

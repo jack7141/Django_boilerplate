@@ -37,7 +37,6 @@ class AccessTokenIssueSerializer(serializers.Serializer):
         refresh_token = RefreshToken.objects.create(
             user=user, token=generate_token(), access_token=access_token, application=application,
         )
-        print(f'access token id : {access_token.id}')
         AccessToken.objects.filter(user=user).exclude(id=access_token.id).delete()
 
         return {
@@ -54,17 +53,6 @@ class AccessTokenIssueSerializer(serializers.Serializer):
         if isinstance(instance, dict):
             return instance
         return super().to_representation(instance)
-
-    def to_res_dict(self):
-        res_data = {
-            'access_token': self.data.get('access_token'),
-            'refresh_token': self.data.get('refresh_token'),
-            'expires_in': self.data.get('expires_in'),
-            'token_type': 'Bearer',
-            'scope': 'read write',
-            'user_id': self.data.get('user_id'),
-        }
-        return res_data
 
 
 

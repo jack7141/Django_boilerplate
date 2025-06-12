@@ -34,7 +34,7 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         LoginHistory.objects.create(user=user, ip=get_client_ip(self.request))
         s = AccessTokenIssueSerializer(data={'user_id': user.id})
         s.is_valid(raise_exception=True)
-        return Response(s.to_res_dict(), status=status.HTTP_201_CREATED)
+        return Response(s.data, status=status.HTTP_201_CREATED)
 
     def success_login_and_require_join_response(self, social_id):
         user = User.objects.create_user(username=self.social_id_by_platform(social_id))

@@ -10,9 +10,11 @@ from rest_framework import status
 
 from api_server.api.versioned.v1.users.social.serializers.google_serializer import GoogleVerificationSerializer
 from api_server.api.versioned.v1.users.social.serializers.join_serializer import JoinSerializer
+from api_server.api.versioned.v1.users.social.serializers.kakao_serializer import KaKaoVerificationSerializer
 from api_server.api.versioned.v1.users.social.serializers.token_serializer import AccessTokenIssueSerializer
 from api_server.api.versioned.v1.users.social.viewsets import SocialOAuthViewSet
 from api_server.common.exceptions import InvalidSocialToken, AlreadyJoined
+from api_server.common.viewset import MappingViewSetMixin
 from api_server.oauth.models import AuthWithGoogle
 
 from google.oauth2.id_token import verify_oauth2_token
@@ -37,10 +39,13 @@ class UserAuthViewSet(
         return super().create(request, *args, **kwargs)
 
 
-class AuthViewSet(SocialOAuthViewSet):
+class AuthViewSet(MappingViewSetMixin, SocialOAuthViewSet):
     """"""
     queryset = AuthWithGoogle.objects.all()
-    serializer_class = GoogleVerificationSerializer
+    serializer_action_map = {
+        "create_google": GoogleVerificationSerializer,
+        "create_kakao": KaKaoVerificationSerializer,
+    }
 
     def social_id_by_platform(self, social_id):
         return f'google-{social_id}'
@@ -60,6 +65,31 @@ class AuthViewSet(SocialOAuthViewSet):
                     return self.require_join_response(obj.user_id)
             else:
                 return self.success_login_and_require_join_response(google_id)
+        except Exception as _:
+            raise InvalidSocialToken
+
+    def create_kakao(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        access_token = serializer.validated_data['access_token']
+        import requests
+        res = requests.post(
+            url='https://kapi.kakao.com/v2/user/me',
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        kakao_id = res.json().get('id', None)
+        if not kakao_id:
+            raise InvalidSocialToken
+
+        obj = self.get_queryset().filter(social_id=kakao_id).first()
+        try:
+            if obj:
+                if obj.user.has_profile:
+                    return self.success_login_response(obj.user)
+                else:
+                    return self.require_join_response(obj.user_id)
+            else:
+                return self.success_login_and_require_join_response(kakao_id)
         except Exception as _:
             raise InvalidSocialToken
 
@@ -88,4 +118,4 @@ class UserJoinViewSet(UserAuthViewSet):
 
         s = AccessTokenIssueSerializer(data={'user_id': user.id})
         s.is_valid(raise_exception=True)
-        return Response(s.to_res_dict(), status=status.HTTP_201_CREATED)
+        return Response(s.data, status=status.HTTP_201_CREATED)
