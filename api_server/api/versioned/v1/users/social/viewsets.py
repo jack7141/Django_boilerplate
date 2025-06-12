@@ -14,10 +14,20 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     queryset = None
     serializer_class = None
     permission_classes = [permissions.AllowAny]
+    
+    # 플랫폼별 prefix 매핑
+    platform_prefix_map = {}
 
-    @abstractmethod
-    def social_id_by_platform(self, social_id):
-        return
+    def get_platform_prefix(self, action_name):
+        """액션 이름을 기반으로 플랫폼 prefix를 반환"""
+        return self.platform_prefix_map.get(action_name, 'unknown')
+
+    def social_id_by_platform(self, social_id, action_name=None):
+        """플랫폼별로 social_id에 prefix를 추가"""
+        if action_name:
+            prefix = self.get_platform_prefix(action_name)
+            return f'{prefix}-{social_id}'
+        return str(social_id)
 
     @staticmethod
     def require_join_response(user_id):
@@ -37,6 +47,7 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(s.data, status=status.HTTP_201_CREATED)
 
     def success_login_and_require_join_response(self, social_id):
-        user = User.objects.create_user(username=self.social_id_by_platform(social_id))
+        username = self.social_id_by_platform(social_id, self.action)
+        user = User.objects.create_user(username=username)
         self.queryset.create(user=user, social_id=social_id)
         return self.require_join_response(user.id)

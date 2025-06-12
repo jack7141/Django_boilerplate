@@ -42,13 +42,15 @@ class UserAuthViewSet(
 class AuthViewSet(MappingViewSetMixin, SocialOAuthViewSet):
     """"""
     queryset = AuthWithGoogle.objects.all()
+    # 플랫폼별 prefix 매핑
+    platform_prefix_map = {
+        "create_google": "google",
+        "create_kakao": "kakao",
+    }
     serializer_action_map = {
         "create_google": GoogleVerificationSerializer,
         "create_kakao": KaKaoVerificationSerializer,
     }
-
-    def social_id_by_platform(self, social_id):
-        return f'google-{social_id}'
 
     def create_google(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
