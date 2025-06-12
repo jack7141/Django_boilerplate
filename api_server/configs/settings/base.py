@@ -181,7 +181,10 @@ AUTHENTICATION_BACKENDS = (
 )
 ENC_FIELD_KEY_1 = env.get('FIELD_ENCRYPTION_KEYS')
 FIELD_ENCRYPTION_KEYS = [ENC_FIELD_KEY_1]
-ACEESS_TOKEN_EXPIRES = env.get('ACEESS_TOKEN_EXPIRES')
+
+# OAuth2 토큰 설정
+ACCESS_TOKEN_EXPIRES = int(env.get('ACCESS_TOKEN_EXPIRES', '3600'))  # 1시간
+GOOGLE_OAUTH_AUDIENCE = env.get('GOOGLE_OAUTH_AUDIENCE')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
