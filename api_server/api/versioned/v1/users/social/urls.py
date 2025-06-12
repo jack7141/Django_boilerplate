@@ -1,6 +1,8 @@
 from django.urls import path, include
-from .views import StatusViewSet
+from .views import StatusViewSet, AuthViewSet
 
+# create_google
 urlpatterns = [
-    path('google', StatusViewSet.as_view({'get': 'status'})),
+    path('', StatusViewSet.as_view({'get': 'status'})),
+    path('google', AuthViewSet.as_view({'post': 'create_google'})),
 ]

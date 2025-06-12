@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'oauth2_provider',
     'drf_spectacular',
     'rest_framework',
     'drf_yasg',
@@ -97,6 +98,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 100,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
@@ -179,7 +181,7 @@ AUTHENTICATION_BACKENDS = (
 )
 ENC_FIELD_KEY_1 = env.get('FIELD_ENCRYPTION_KEYS')
 FIELD_ENCRYPTION_KEYS = [ENC_FIELD_KEY_1]
-
+ACEESS_TOKEN_EXPIRES = env.get('ACEESS_TOKEN_EXPIRES')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
