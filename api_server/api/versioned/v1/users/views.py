@@ -1,35 +1,20 @@
-from rest_framework import viewsets
-from rest_framework.serializers import Serializer
+from rest_framework import viewsets, serializers
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.status import HTTP_200_OK
-
+from api_server.api.versioned.v1.users.serializers import UserSerializer
 from api_server.users.models import User
-
-
-class StatusViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    status: 상태 체크
-
-    Kibana Heartbeat 상태 체크용 API 입니다.
-    """
-    permission_classes = [AllowAny, ]
-    serializer_class = Serializer
-
-    def status(self, request, *args, **kwargs):
-        return Response(status=HTTP_200_OK)
-
-
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    status: 상태 체크
-
-    Kibana Heartbeat 상태 체크용 API 입니다.
+    사용자 정보 ViewSet
+    
+    인증된 사용자의 정보를 조회합니다.
     """
-    queryset = User.objects.all()
+    queryset = User.objects.select_related('profile')
     permission_classes = [IsAuthenticated, ]
-    serializer_class = Serializer
+    serializer_class = UserSerializer
 
-    def status(self, request, *args, **kwargs):
-        return Response(status=HTTP_200_OK)
+    def me(self, request, *args, **kwargs):
+        """현재 로그인한 사용자 정보 반환"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)

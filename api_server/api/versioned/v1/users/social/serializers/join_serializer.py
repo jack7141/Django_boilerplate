@@ -14,6 +14,7 @@ class JoinSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = None
+
     user_id = serializers.CharField(
         allow_null=False,
         label='외부에 노출되는 고유아이디',
@@ -24,7 +25,7 @@ class JoinSerializer(serializers.Serializer):
     )
     nickname = serializers.CharField()
     email = serializers.EmailField()
-    birthday = serializers.DateField()
+    birthday = serializers.DateField(required=False, allow_null=True)
     def validate(self, attrs):
         user = self.context['request'].user
         self.user = user
@@ -35,12 +36,12 @@ class JoinSerializer(serializers.Serializer):
             user_id = validated_data.pop('user_id', None)
             nickname = validated_data.pop('nickname', None)
             birthday = validated_data.pop('birthday', None)
-
+            email = validated_data.pop('email', None)
             self.user.last_login = timezone.now()
             self.user.user_id = user_id
 
             LoginHistory.objects.create(user=self.user, ip=get_client_ip(self.context['request']),)
-            profile = UserProfile.objects.create(user=self.user, nickname=nickname, birthday=birthday)
+            profile = UserProfile.objects.create(user=self.user, nickname=nickname, birthday=birthday, email=email)
             self.user.save()
             return profile
 
