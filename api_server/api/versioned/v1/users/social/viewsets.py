@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from api_server.api.versioned.v1.users.social.serializers.token_serializer import AccessTokenIssueSerializer, \
     AccessTokenSetNoProfileSerializer
+from api_server.common.exceptions import InvalidSocialToken
 from api_server.common.utils import get_client_ip
 from api_server.oauth.models import LoginHistory
 from api_server.users.models import User
@@ -29,8 +30,7 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             return f'{prefix}-{social_id}'
         return str(social_id)
 
-    @staticmethod
-    def require_join_response(user_id):
+    def require_join_response(self, user_id):
         token_serializer = AccessTokenIssueSerializer(data={'user_id': user_id})
         token_serializer.is_valid(raise_exception=True)
         res_serializer = AccessTokenSetNoProfileSerializer(data=token_serializer.data)
@@ -51,3 +51,17 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         user = User.objects.create_user(username=username)
         self.get_queryset().create(user=user, social_id=social_id)
         return self.require_join_response(user.id)
+
+    def handle_social_user(self, social_id):
+        """소셜 ID로 사용자 로그인 처리 (공통 로직)"""
+        obj = self.get_queryset().filter(social_id=social_id).first()
+        try:
+            if obj:
+                if obj.user.has_profile:
+                    return self.success_login_response(obj.user)
+                else:
+                    return self.require_join_response(obj.user_id)
+            else:
+                return self.success_login_and_require_join_response(social_id)
+        except Exception as _:
+            raise InvalidSocialToken

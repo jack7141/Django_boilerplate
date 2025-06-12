@@ -21,7 +21,7 @@ from google.oauth2.id_token import verify_oauth2_token
 from google.auth.transport.requests import Request
 
 from api_server.users.models import UserProfile, User
-
+import requests
 
 class UserAuthViewSet(
     viewsets.GenericViewSet,
@@ -48,14 +48,15 @@ class AuthViewSet(MappingViewSetMixin, QuerysetMapMixin, SocialOAuthViewSet):
         "create_naver": AuthWithNaver.objects.all(),
         "create_apple": AuthWithApple.objects.all(),
     }
+
+    serializer_action_map = {
+        "create_google": GoogleVerificationSerializer,
+        "create_kakao": KaKaoVerificationSerializer,
+    }
     # 플랫폼별 prefix 매핑
     platform_prefix_map = {
         "create_google": "google",
         "create_kakao": "kakao",
-    }
-    serializer_action_map = {
-        "create_google": GoogleVerificationSerializer,
-        "create_kakao": KaKaoVerificationSerializer,
     }
 
     def create_google(self, request, *args, **kwargs):
@@ -64,42 +65,17 @@ class AuthViewSet(MappingViewSetMixin, QuerysetMapMixin, SocialOAuthViewSet):
         id_token = serializer.validated_data['id_token']
         google_credentials = verify_oauth2_token(id_token, Request(), settings.GOOGLE_OAUTH_AUDIENCE)
         google_id = google_credentials.get('sub')
-        obj = self.get_queryset().filter(social_id=google_id).first()
-        try:
-            if obj:
-                if obj.user.has_profile:
-                    return self.success_login_response(obj.user)
-                else:
-                    return self.require_join_response(obj.user_id)
-            else:
-                return self.success_login_and_require_join_response(google_id)
-        except Exception as _:
-            raise InvalidSocialToken
+        return self.handle_social_user(google_id)
 
     def create_kakao(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         access_token = serializer.validated_data['access_token']
-        import requests
-        res = requests.post(
-            url='https://kapi.kakao.com/v2/user/me',
-            headers={'Authorization': f'Bearer {access_token}'}
-        )
+        res = requests.post(url='https://kapi.kakao.com/v2/user/me', headers={'Authorization': f'Bearer {access_token}'})
         kakao_id = res.json().get('id', None)
         if not kakao_id:
             raise InvalidSocialToken
-
-        obj = self.get_queryset().filter(social_id=kakao_id).first()
-        try:
-            if obj:
-                if obj.user.has_profile:
-                    return self.success_login_response(obj.user)
-                else:
-                    return self.require_join_response(obj.user_id)
-            else:
-                return self.success_login_and_require_join_response(kakao_id)
-        except Exception as _:
-            raise InvalidSocialToken
+        return self.handle_social_user(kakao_id)
 
 
 
