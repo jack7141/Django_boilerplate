@@ -11,6 +11,18 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
+class KaKaoVerificationSerializer(serializers.Serializer):
+    access_token = serializers.CharField(label='KaKao Access ID Token', help_text='카카오 연동 로그인시 발급 받은 `access-token`')
+
+
+class NaverVerificationSerializer(serializers.Serializer):
+    access_token = serializers.CharField(label='Naver Access ID Token', help_text='네이버 연동 로그인시 발급 받은 `access-token`')
+
+
+class GoogleVerificationSerializer(serializers.Serializer):
+    id_token = serializers.CharField(label='Google Access ID Token', help_text='구글 연동 로그인시 발급 받은 `ID-token`')
+
+
 class AccessTokenIssueSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(allow_null=True)
     access_token = serializers.CharField(read_only=True)

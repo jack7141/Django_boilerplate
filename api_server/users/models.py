@@ -57,6 +57,22 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
     def has_profile(self):
         return hasattr(self, 'profile')
 
+    @property
+    def provider(self):
+        """
+        사용자가 어떤 소셜 로그인 제공자를 통해 가입했는지 반환하는 프로퍼티
+        관련된 OneToOneField를 확인하여 결정합니다.
+        """
+        if hasattr(self, 'auth_google') and self.auth_google:
+            return 'google'
+        elif hasattr(self, 'auth_kakao') and self.auth_kakao:
+            return 'kakao'
+        elif hasattr(self, 'auth_naver') and self.auth_naver:
+            return 'naver'
+        elif hasattr(self, 'auth_apple') and self.auth_apple:
+            return 'apple'
+        return 'unknown'
+
     class Meta:
         verbose_name = '사용자 목록'
         verbose_name_plural = verbose_name

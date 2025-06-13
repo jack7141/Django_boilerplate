@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from django.utils import timezone
 
-from api_server.api.versioned.v1.users.social.serializers.token_serializer import AccessTokenIssueSerializer, \
+from api_server.api.versioned.v1.users.social.serializers import AccessTokenIssueSerializer, \
     AccessTokenSetNoProfileSerializer
 from api_server.common.exceptions import InvalidSocialToken
 from api_server.common.utils import get_client_ip
