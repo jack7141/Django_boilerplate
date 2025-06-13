@@ -12,6 +12,7 @@ router.register("", UserViewSet)
 
 urlpatterns = [
     path('me/', UserViewSet.as_view({'get': 'me'})),
+    path('refresh-token', UserViewSet.as_view({'post': 'refresh_token'})),
     path('logout', UserViewSet.as_view({'post': 'logout'})),
     path('social/', include(social_urlpatterns)),
 ] + router.urls

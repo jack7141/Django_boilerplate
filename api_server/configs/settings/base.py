@@ -167,13 +167,15 @@ AUTH_USER_MODEL = "users.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+# OAuth2 설정
 OAUTH2_PROVIDER = {
-    "SCOPES": {
-        "read": "Read scope",
-        "write": "Write scope",
-    },
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 604800 * 12,
-    "REFRESH_TOKEN_EXPIRE_SECONDS": 604800 * 12,
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 24 * 3600,  # 24시간
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 30 * 24 * 3600,  # 30일
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+    }
 }
 
 AUTHENTICATION_BACKENDS = (

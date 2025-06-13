@@ -81,3 +81,11 @@ class AccessTokenSetNoProfileSerializer(serializers.Serializer):
             'tokenType': 'Bearer',
             'scope': 'read write',
         }
+
+
+class AccessTokenRefreshSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(label='리프레시 토큰')
+
+    def validate_refresh_token(self, value):
+        value = get_object_or_404(RefreshToken, token=value)
+        return value
