@@ -31,7 +31,7 @@ class AccessTokenIssueSerializer(serializers.Serializer):
     token_type = serializers.CharField(read_only=True)
     scope = serializers.CharField(read_only=True)
 
-    def get_application():
+    def get_application(self):
         """OAuth2 Application 조회"""
         try:
             return Application.objects.get(name='Django API Server')
