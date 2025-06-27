@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import UniqueConstraint, Q
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from model_utils.managers import SoftDeletableManager
@@ -46,13 +47,23 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
         max_length=20, null=True, blank=True, verbose_name='사용자 검색 등에 사용되는 고유 아이디',
                                help_text='입력된 아이디는 고유한 값을 가짐. (중복불가)<br/>''또한 변경 가능하지만, 최종으로 사용된 아이디는 회원 탈퇴가 있더라도 재사용 할 수는 없음',
                                )
+    username = models.CharField(
+        _("username"),
+        max_length=150,
+        help_text=_(
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        ),
+        error_messages={
+            "unique": _("A user with that username already exists."),
+        },
+    )
     password = models.CharField(_('password'), max_length=128, null=True, blank=True)
     email = None
     first_name = None
     last_name = None
 
     is_confirm = models.BooleanField(default=False, verbose_name='약관 동의 유무')
-    email = models.EmailField(unique=True)
+    email = models.EmailField(_('email address'))
     EMAIL_FIELD = None
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -67,6 +78,18 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
     class Meta:
         verbose_name = '사용자 목록'
         verbose_name_plural = verbose_name
+        constraints = [
+            UniqueConstraint(
+                fields=['email'],
+                condition=Q(is_removed=False),
+                name='unique_email_if_not_removed'
+            ),
+            UniqueConstraint(
+                fields=['username'],
+                condition=Q(is_removed=False),
+                name='unique_username_if_not_removed'
+            )
+        ]
 
 
 
