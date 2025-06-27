@@ -21,10 +21,16 @@ IMAGE_SCALE = Choices(
 )
 
 class UserManager(SoftDeletableManager, BaseUserManager):
-    def create_user(self, username, password=None):
-        user = self.model(username=username,)
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=email, **extra_fields)
+
         if password:
             user.set_password(password)
+
         user.save(using=self._db)
         return user
 
@@ -46,32 +52,17 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
     last_name = None
 
     is_confirm = models.BooleanField(default=False, verbose_name='약관 동의 유무')
-
+    email = models.EmailField(unique=True)
     EMAIL_FIELD = None
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+    provider = models.CharField(max_length=10, null=True, blank=True)
 
     objects = UserManager(_emit_deprecation_warnings=True)
 
     @property
     def has_profile(self):
         return hasattr(self, 'profile')
-
-    @property
-    def provider(self):
-        """
-        사용자가 어떤 소셜 로그인 제공자를 통해 가입했는지 반환하는 프로퍼티
-        관련된 OneToOneField를 확인하여 결정합니다.
-        """
-        if hasattr(self, 'auth_google') and self.auth_google:
-            return 'google'
-        elif hasattr(self, 'auth_kakao') and self.auth_kakao:
-            return 'kakao'
-        elif hasattr(self, 'auth_naver') and self.auth_naver:
-            return 'naver'
-        elif hasattr(self, 'auth_apple') and self.auth_apple:
-            return 'apple'
-        return 'unknown'
 
     class Meta:
         verbose_name = '사용자 목록'
@@ -83,7 +74,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name='사용자')
     nickname = models.CharField(max_length=60, null=True, blank=True, verbose_name='사용자 닉네임')
     link = models.URLField(max_length=255, null=True, blank=True, verbose_name='개인 사이트 링크')
-    email = models.EmailField(verbose_name='사용자 이메일', null=True, blank=True)
     gender = models.CharField(max_length=1, verbose_name='성별', null=True, blank=True, choices=GENDER_TYPE)
     birthday = models.DateField(verbose_name='생일', null=True, blank=True)
     introduce = models.TextField(verbose_name='프로필 소개', null=True, blank=True)

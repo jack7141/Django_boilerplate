@@ -169,13 +169,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 # OAuth2 설정
 OAUTH2_PROVIDER = {
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 24 * 3600,  # 24시간
-    'REFRESH_TOKEN_EXPIRE_SECONDS': 30 * 24 * 3600,  # 30일
-    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
-    'SCOPES': {
-        'read': 'Read scope',
-        'write': 'Write scope',
-    }
+    "SCOPES": {
+        "read": "Read scope",
+        "write": "Write scope",
+    },
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 604800 * 12,
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 604800 * 12,
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -183,7 +182,9 @@ AUTHENTICATION_BACKENDS = (
 )
 ENC_FIELD_KEY_1 = env.get('FIELD_ENCRYPTION_KEYS')
 FIELD_ENCRYPTION_KEYS = [ENC_FIELD_KEY_1]
-
+APPLICATION_WEB_AUTH_CLIENT_ID = env.get('APPLICATION_WEB_AUTH_CLIENT_ID')
+APPLICATION_WEB_AUTH_CLIENT_SECRET = env.get('APPLICATION_WEB_AUTH_CLIENT_SECRET')
+BASE_URL = env.get('BASE_URL')
 # OAuth2 토큰 설정
 ACCESS_TOKEN_EXPIRES = int(env.get('ACCESS_TOKEN_EXPIRES', '3600'))  # 1시간
 GOOGLE_OAUTH_AUDIENCE = env.get('GOOGLE_OAUTH_AUDIENCE')

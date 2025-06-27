@@ -13,6 +13,12 @@ from api_server.common.viewset import MappingViewSetMixin
 from api_server.users.models import User
 
 from django.shortcuts import get_object_or_404
+from django.conf import settings
+
+import requests
+from django.utils import timezone
+from datetime import timedelta
+
 
 class UserViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     """
@@ -22,6 +28,9 @@ class UserViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     """
     queryset = User.objects.select_related('profile')
     permission_classes = [IsAuthenticated, ]
+    permission_classes_map = {
+        "refresh_token": [AllowAny, ],
+    }
     serializer_class = UserSerializer
     serializer_action_map = {
         "logout": Serializer,
@@ -55,7 +64,7 @@ class UserViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def refresh_token(self, request, *args, **kwargs):
-        url = 'http://localhost:8000/oa/token/'
+        url = f'{settings.BASE_URL}/oa/token/'
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         refresh_token = serializer.validated_data['refresh_token']
@@ -64,15 +73,11 @@ class UserViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         prev_access = prev_token.access_token
 
         data = {
-            'client_id': 'test',
-            'client_secret': 'test',
+            'client_id': settings.APPLICATION_WEB_AUTH_CLIENT_ID,
+            'client_secret': settings.APPLICATION_WEB_AUTH_CLIENT_SECRET,
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
         }
-
-        import requests
-        from django.utils import timezone
-        from datetime import timedelta
 
         user = prev_access.user
         res = requests.post(url=url, data=data, timeout=5)

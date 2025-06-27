@@ -35,7 +35,7 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         token_serializer.is_valid(raise_exception=True)
         res_serializer = AccessTokenSetNoProfileSerializer(data=token_serializer.data)
         res_serializer.is_valid(raise_exception=True)
-        return Response(res_serializer.data, status=status.HTTP_412_PRECONDITION_FAILED)
+        return Response(res_serializer.data, status=status.HTTP_200_OK)
 
     def success_login_response(self, user):
         user.last_login = timezone.now()
@@ -45,13 +45,13 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         s.is_valid(raise_exception=True)
         return Response(s.data, status=status.HTTP_201_CREATED)
 
-    def success_login_and_require_join_response(self, social_id):
-        username = self.social_id_by_platform(social_id, self.action)
-        user = User.objects.create_user(username=username)
+    def success_login_and_require_join_response(self, social_id, email):
+        provider = self.get_platform_prefix(self.action)
+        user = User.objects.create_user(email=email, provider=provider)
         self.get_queryset().create(user=user, social_id=social_id)
         return self.require_join_response(user.id)
 
-    def handle_social_user(self, social_id):
+    def handle_social_user(self, social_id, email):
         """소셜 ID로 사용자 로그인 처리 (공통 로직)"""
         obj = self.get_queryset().filter(social_id=social_id).first()
         try:
@@ -61,6 +61,6 @@ class SocialOAuthViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                 else:
                     return self.require_join_response(obj.user_id)
             else:
-                return self.success_login_and_require_join_response(social_id)
+                return self.success_login_and_require_join_response(social_id, email)
         except Exception as _:
             raise InvalidSocialToken

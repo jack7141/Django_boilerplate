@@ -37,7 +37,8 @@ class AuthViewSet(MappingViewSetMixin, QuerysetMapMixin, SocialOAuthViewSet):
         id_token = serializer.validated_data['id_token']
         google_credentials = verify_oauth2_token(id_token, Request(), settings.GOOGLE_OAUTH_AUDIENCE)
         google_id = google_credentials.get('sub')
-        return self.handle_social_user(google_id)
+        google_email = google_credentials.get('email')
+        return self.handle_social_user(google_id, google_email)
 
     def create_kakao(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
