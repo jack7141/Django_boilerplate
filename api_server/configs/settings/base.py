@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'encrypted_fields',
     'api_server.users',
     'api_server.oauth',
+    'api_server.images',
 ]
 
 MIDDLEWARE = [

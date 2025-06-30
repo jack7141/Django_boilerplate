@@ -1,12 +1,14 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import UniqueConstraint, Q
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from model_utils.managers import SoftDeletableManager
-from model_utils.models import UUIDModel, SoftDeletableModel
+from model_utils.models import UUIDModel, SoftDeletableModel, TimeStampedModel
 
+from api_server.images.models import Images
 from api_server.users.choices import MBTI_TYPE, IMAGE_SCALE, GENDER_TYPE
 
 
@@ -86,22 +88,11 @@ class User(UUIDModel, AbstractUser, SoftDeletableModel):
 
 
 
-class UserProfile(models.Model):
+class UserProfile(UUIDModel, TimeStampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name='사용자')
     nickname = models.CharField(max_length=60, null=True, blank=True, verbose_name='사용자 닉네임')
-    profile_image_link = models.URLField(max_length=255, null=True, blank=True, verbose_name='프로필 이미지 링크')
     gender = models.CharField(max_length=1, verbose_name='성별', null=True, blank=True, choices=GENDER_TYPE)
     birthday = models.DateTimeField(verbose_name='생일', null=True, blank=True, help_text='사주 컨텐츠를 활용하기 위해 시간까지 활용')
     mbti = models.CharField(max_length=4, null=True, blank=True, verbose_name='MBTI', choices=MBTI_TYPE)
     introduce = models.TextField(verbose_name='프로필 소개', null=True, blank=True)
-
-
-
-class UserImage(models.Model):
-    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='images', verbose_name='프로필')
-    image_url = models.URLField(max_length=255, verbose_name='이미지 URL')
-    scale = models.CharField(max_length=10, choices=IMAGE_SCALE, verbose_name='이미지 스케일')
-
-    class Meta:
-        verbose_name = '사용자 이미지'
-        verbose_name_plural = verbose_name
+    images = GenericRelation(Images)
